@@ -79,14 +79,22 @@ build_framework() {
 
     cd "$src_dir"
 
-    # Fix: Create symlinks for Qt6 WaylandClient private headers
-    # maliit-framework includes <QtWaylandClient/private/...> but headers are at
-    # /usr/include/aarch64-linux-gnu/qt6/QtWaylandClient/6.10.2/QtWaylandClient/private/
+    # Fix: Copy ALL Qt6 module private headers from versioned to non-versioned paths.
+    # QtWaylandClient private headers include <QtCore/private/qglobal_p.h> etc,
+    # which live at versioned paths like QtCore/6.10.2/QtCore/private/.
+    # We need every module's private/ dir accessible at the non-versioned path.
     local qt6_inc="/usr/include/$(uname -m)-linux-gnu/qt6"
-    if [ -d "$qt6_inc/QtWaylandClient/6.10.2/QtWaylandClient/private" ]; then
-        mkdir -p "$qt6_inc/QtWaylandClient/private"
-        cp -a "$qt6_inc/QtWaylandClient/6.10.2/QtWaylandClient/private/"* "$qt6_inc/QtWaylandClient/private/" 2>/dev/null || true
-    fi
+    for module_dir in "$qt6_inc"/*/; do
+        local module_name=$(basename "$module_dir")
+        # Match versioned subdirs (e.g. 6.10.2)
+        for versioned_private in "$module_dir"/6.*/"$module_name"/private; do
+            if [ -d "$versioned_private" ]; then
+                mkdir -p "$module_dir/private"
+                cp -a "$versioned_private/"* "$module_dir/private/" 2>/dev/null || true
+                echo "    Copied private headers for $module_name"
+            fi
+        done
+    done
 
     # Patch: Fix Qt6 moc parse error for Q_PLUGIN_METADATA IID
     local shell_plugin="src/qt/plugins/shellintegration/inputpanelshellplugin.cpp"
