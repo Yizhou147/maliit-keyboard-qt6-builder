@@ -1,0 +1,43 @@
+FROM ubuntu:26.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake pkg-config git \
+    qt6-base-dev qt6-base-dev-tools \
+    qt6-declarative-dev \
+    qt6-tools-dev qt6-tools-dev-tools \
+    qt6-base-private-dev \
+    qt6-declarative-private-dev \
+    libglib2.0-dev \
+    libhunspell-dev \
+    libchewing3-dev \
+    libpinyin-dev \
+    libpresage-dev \
+    libxcb1-dev \
+    gettext \
+    wget ca-certificates \
+    devscripts debhelper \
+    qt6-virtualkeyboard-dev \
+    libqt6virtualkeyboard6 \
+    qml6-module-qtquick-virtualkeyboard \
+    libqt6waylandclient6 qt6-wayland-dev \
+    wayland-protocols libwayland-dev \
+    libsystemd-dev \
+    libgsettings-qt-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+COPY build.sh /build/build.sh
+RUN chmod +x /build/build.sh
+
+# Set output to a mountable location
+ENV OUTPUT_DIR=/output
+ENV BUILD_DIR=/build/builddir
+ENV JOBS=4
+
+RUN mkdir -p /output && /build/build.sh
+
+# The output .deb will be in /output

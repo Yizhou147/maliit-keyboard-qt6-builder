@@ -1,0 +1,63 @@
+name: Build maliit-keyboard Qt6
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build arm64 package
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.build
+          platforms: linux/arm64
+          outputs: type=local,dest=./output
+          push: false
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: maliit-keyboard-qt6-arm64
+          path: output/*.deb
+          retention-days: 30
+
+  release:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: maliit-keyboard-qt6-arm64
+          path: ./deb
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          name: maliit-keyboard-qt6 build ${{ github.run_number }}
+          files: ./deb/*.deb
+          draft: false
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
