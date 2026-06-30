@@ -21,6 +21,8 @@ FRAMEWORK_BRANCH="qt6-support_v2"
 KEYBOARD_REPO="https://github.com/cordlandwehr/keyboard.git"
 KEYBOARD_BRANCH="qt6-support"
 
+export PATH="$PATH:/usr/lib/qt6/libexec"
+
 echo "=== maliit-keyboard Qt6 builder ==="
 echo "Build dir: ${BUILD_DIR}"
 echo "Output dir: ${OUTPUT_DIR}"
@@ -84,6 +86,7 @@ build_framework() {
         -DCMAKE_INSTALL_PREFIX="$PREFIX" \
         -DCMAKE_BUILD_TYPE=Release \
         -DBUILD_WITH_QT6=ON \
+        -DQtWaylandScanner_EXECUTABLE=/usr/lib/qt6/libexec/qtwaylandscanner \
         -Denable-inputcontext-qt4=OFF \
         -Denable-input-context-link=OFF \
         -Denable-wayland-gtk=OFF \
