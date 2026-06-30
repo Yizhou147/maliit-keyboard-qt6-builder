@@ -79,6 +79,13 @@ build_framework() {
 
     cd "$src_dir"
 
+    # Patch: Fix Qt6 moc parse error for Q_PLUGIN_METADATA IID
+    # QWaylandShellIntegrationFactoryInterface_iid macro doesn't exist in Qt6 6.10+
+    local shell_plugin="src/qt/plugins/shellintegration/inputpanelshellplugin.cpp"
+    if [ -f "$shell_plugin" ]; then
+        sed -i 's|Q_PLUGIN_METADATA(IID QWaylandShellIntegrationFactoryInterface_iid|Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QWaylandShellIntegrationFactoryInterface.5.0"|' "$shell_plugin"
+    fi
+
     mkdir -p "$build_dir"
     cd "$build_dir"
 
