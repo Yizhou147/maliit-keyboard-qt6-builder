@@ -57,7 +57,7 @@ install_deps() {
         qt6-virtualkeyboard-dev \
         libqt6virtualkeyboard6 \
         qml6-module-qtquick-virtualkeyboard \
-        libqt6waylandclient6 qt6-wayland-dev \
+        libqt6waylandclient6 qt6-wayland-dev qt6-wayland-private-dev \
         wayland-protocols libwayland-dev \
         libsystemd-dev
 
@@ -79,8 +79,16 @@ build_framework() {
 
     cd "$src_dir"
 
+    # Fix: Create symlinks for Qt6 WaylandClient private headers
+    # maliit-framework includes <QtWaylandClient/private/...> but headers are at
+    # /usr/include/aarch64-linux-gnu/qt6/QtWaylandClient/6.10.2/QtWaylandClient/private/
+    local qt6_inc="/usr/include/$(uname -m)-linux-gnu/qt6"
+    if [ -d "$qt6_inc/QtWaylandClient/6.10.2/QtWaylandClient/private" ]; then
+        mkdir -p "$qt6_inc/QtWaylandClient/private"
+        cp -a "$qt6_inc/QtWaylandClient/6.10.2/QtWaylandClient/private/"* "$qt6_inc/QtWaylandClient/private/" 2>/dev/null || true
+    fi
+
     # Patch: Fix Qt6 moc parse error for Q_PLUGIN_METADATA IID
-    # QWaylandShellIntegrationFactoryInterface_iid macro doesn't exist in Qt6 6.10+
     local shell_plugin="src/qt/plugins/shellintegration/inputpanelshellplugin.cpp"
     if [ -f "$shell_plugin" ]; then
         sed -i 's|Q_PLUGIN_METADATA(IID QWaylandShellIntegrationFactoryInterface_iid|Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QWaylandShellIntegrationFactoryInterface.5.0"|' "$shell_plugin"
