@@ -90,6 +90,8 @@ build_framework() {
         -Denable-inputcontext-qt4=OFF \
         -Denable-input-context-link=OFF \
         -Denable-wayland-gtk=OFF \
+        -Denable-xcb=OFF \
+        -Denable-hwkeyboard=OFF \
         -Denable-docs=OFF \
         -Denable-tests=OFF \
         -Denable-examples=OFF
@@ -161,24 +163,16 @@ Version: 2.3.1
 Section: utils
 Priority: optional
 Architecture: arm64
-Depends: libqt6virtualkeyboard6, qml6-module-qtquick-virtualkeyboard, qt6-wayland, libmaliit6-plugins2, libhunspell-dev, libchewing3, libpinyin15, libpresage1v5
+Depends: libmaliit6-plugins2, libqt6virtualkeyboard6, qml6-module-qtquick-virtualkeyboard, qt6-wayland, libhunspell-1.7-0, libchewing3, libpinyin15, libpresage1v5
 Maintainer: Droidspaces Builder
 Description: Maliit Keyboard (Qt6 version) - Virtual on-screen keyboard
  Qt6 build of maliit-keyboard for Plasma Mobile / Wayland.
  Built from maliit/keyboard PR #235 and maliit/framework PR #125.
 EOF
 
-    # Create postinst to update desktop file
-    cat > "${pkg_dir}/DEBIAN/postinst" << 'POSTINST'
-#!/bin/bash
-set -e
-# Update the desktop file to point to the Qt6 binary
-if [ -f /usr/share/applications/com.github.maliit.keyboard.desktop ]; then
-    sed -i 's|Exec=maliit-keyboard|Exec=maliit6-keyboard|' \
-        /usr/share/applications/com.github.maliit.keyboard.desktop
-fi
-POSTINST
-    chmod 755 "${pkg_dir}/DEBIAN/postinst"
+    # Binary is still maliit-keyboard (not maliit6-keyboard)
+    # MALIIT_SUFFIX only affects install paths (maliit6/plugins, maliit6/keyboard2)
+    # No postinst needed - desktop file already has Exec=maliit-keyboard
 
     mkdir -p "$OUTPUT_DIR"
     dpkg-deb --build "$pkg_dir" "${OUTPUT_DIR}/${deb_name}.deb"
