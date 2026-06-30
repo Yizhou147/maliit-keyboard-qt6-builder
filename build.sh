@@ -79,19 +79,23 @@ build_framework() {
 
     cd "$src_dir"
 
-    # Fix: Copy ALL Qt6 module private headers from versioned to non-versioned paths.
-    # QtWaylandClient private headers include <QtCore/private/qglobal_p.h> etc,
-    # which live at versioned paths like QtCore/6.10.2/QtCore/private/.
-    # We need every module's private/ dir accessible at the non-versioned path.
+    # Fix: Flatten ALL Qt6 versioned header directories into non-versioned paths.
+    # Qt6 installs headers under versioned paths like:
+    #   /usr/include/<arch>/qt6/QtCore/6.10.2/QtCore/private/
+    #   /usr/include/<arch>/qt6/QtGui/6.10.2/QtGui/qpa/
+    # But maliit-framework's private headers include without the version,
+    # e.g. <QtCore/private/qglobal_p.h>, <qpa/qplatformwindow.h>.
+    # We copy ALL subdirs (private/, qpa/, etc.) from versioned to non-versioned.
     local qt6_inc="/usr/include/$(uname -m)-linux-gnu/qt6"
     for module_dir in "$qt6_inc"/*/; do
         local module_name=$(basename "$module_dir")
-        # Match versioned subdirs (e.g. 6.10.2)
-        for versioned_private in "$module_dir"/6.*/"$module_name"/private; do
-            if [ -d "$versioned_private" ]; then
-                mkdir -p "$module_dir/private"
-                cp -a "$versioned_private/"* "$module_dir/private/" 2>/dev/null || true
-                echo "    Copied private headers for $module_name"
+        for versioned_dir in "$module_dir"/6.*/"$module_name"/*/; do
+            if [ -d "$versioned_dir" ]; then
+                local subdir_name=$(basename "$versioned_dir")
+                local target="$module_dir/$subdir_name"
+                mkdir -p "$target"
+                cp -a "$versioned_dir"* "$target/" 2>/dev/null || true
+                echo "    Copied $module_name/$subdir_name"
             fi
         done
     done
