@@ -11,9 +11,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     qt6-base-private-dev \
     qt6-declarative-private-dev \
     libglib2.0-dev \
+    libpango1.0-dev \
     libhunspell-dev \
     libchewing3-dev \
-    libpinyin-dev \
+    libpinyin-dev libpinyin-common-dev \
     libpresage-dev \
     libxcb1-dev \
     gettext \
@@ -25,7 +26,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libqt6waylandclient6 qt6-wayland-dev \
     wayland-protocols libwayland-dev \
     libsystemd-dev \
-    libgsettings-qt-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build

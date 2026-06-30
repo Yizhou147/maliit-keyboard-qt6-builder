@@ -40,13 +40,13 @@ install_deps() {
         qt6-base-dev qt6-base-dev-tools \
         qt6-declarative-dev \
         qt6-tools-dev qt6-tools-dev-tools \
-        libqt6dbus6 qt6-base-private-dev \
+        qt6-base-private-dev \
         qt6-declarative-private-dev \
-        libglib2.0-dev libgio-3.0-cil-dev \
+        libglib2.0-dev \
         libpango1.0-dev \
         libhunspell-dev \
         libchewing3-dev \
-        libpinyin-dev libpinyin13-dev \
+        libpinyin-dev libpinyin-common-dev \
         libpresage-dev \
         libxcb1-dev \
         gettext \
@@ -56,7 +56,8 @@ install_deps() {
         libqt6virtualkeyboard6 \
         qml6-module-qtquick-virtualkeyboard \
         libqt6waylandclient6 qt6-wayland-dev \
-        wayland-protocols libwayland-dev
+        wayland-protocols libwayland-dev \
+        libsystemd-dev
 
     echo "    Dependencies installed."
 }
