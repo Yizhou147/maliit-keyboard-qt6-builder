@@ -33,27 +33,56 @@ docker buildx build --platform linux/arm64 -f Dockerfile.build -o output .
 output/maliit-keyboard-qt6_2.3.1_arm64.deb
 ```
 
-## 在 Droidspaces 中使用
+## 使用方法
 
-在 Dockerfile 中添加：
+### 手动安装（在运行中的容器里）
+
+```bash
+# 1. 下载 .deb
+wget -O /tmp/maliit-keyboard-qt6.deb \
+  "https://github.com/Yizhou147/maliit-keyboard-qt6-builder/releases/latest/download/maliit-keyboard-qt6_2.3.1_arm64.deb"
+
+# 2. 安装
+dpkg -i /tmp/maliit-keyboard-qt6.deb || apt-get install -f -y
+
+# 3. 设置环境变量
+echo "QT_IM_MODULES=qtvirtualkeyboard" >> /etc/environment
+
+# 4. 配置 kwinrc
+sudo -u Gold kwriteconfig6 --file kwinrc --group Wayland --key InputMethod /usr/share/applications/com.github.maliit.keyboard.desktop
+sudo -u Gold kwriteconfig6 --file kwinrc --group Wayland --key VirtualKeyboardEnabled true
+
+# 5. 重启
+systemctl restart plasma-mobile
+```
+
+### 集成到 Droidspaces Dockerfile
+
+在 `Ubuntu-26-KDE.Dockerfile` 的 mobile 包安装段后添加：
 
 ```dockerfile
-# 下载预编译的 Qt6 maliit-keyboard
-RUN wget -O /tmp/maliit-keyboard-qt6.deb \
-    "https://github.com/你的用户名/maliit-keyboard-qt6-builder/releases/latest/download/maliit-keyboard-qt6_2.3.1_arm64.deb" && \
-    dpkg -i /tmp/maliit-keyboard-qt6.deb || apt-get install -f -y && \
-    rm /tmp/maliit-keyboard-qt6.deb
+    # mobile: 安装 Qt6 版 maliit-keyboard（解决屏幕键盘问题）
+    if [ "$BUILD_KDE" = "mobile" ]; then \
+        wget -q -O /tmp/maliit-keyboard-qt6.deb \
+            "https://github.com/Yizhou147/maliit-keyboard-qt6-builder/releases/latest/download/maliit-keyboard-qt6_2.3.1_arm64.deb" && \
+        dpkg -i /tmp/maliit-keyboard-qt6.deb || apt-get install -f -y && \
+        rm -f /tmp/maliit-keyboard-qt6.deb && \
+        echo "QT_IM_MODULES=qtvirtualkeyboard" >> /etc/environment; \
+    fi
+```
 
-# 环境变量
-RUN echo "QT_IM_MODULES=qtvirtualkeyboard" >> /etc/environment
+在 `EOF_RUN` 段中，mobile 自启动配置部分添加 kwinrc：
 
-# kwinrc 配置（mobile 模式）
-RUN mkdir -p /home/${USERNAME}/.config && \
+```bash
+    # mobile: 配置 KWin 虚拟键盘
+    if [ "$BUILD_KDE" = "mobile" ] ; then
+    mkdir -p /home/${USERNAME}/.config
     cat <<'EOF' > /home/${USERNAME}/.config/kwinrc
 [Wayland]
 InputMethod=/usr/share/applications/com.github.maliit.keyboard.desktop
 VirtualKeyboardEnabled=true
 EOF
+    fi
 ```
 
 ## 依赖
